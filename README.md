@@ -28,7 +28,7 @@ import (
 func main(){
     // Create new map
     m := ManagedMap.NewManagedMap()
-    // Map must be closed before it can be garbage collected
+    // Map must be closed before it can be safely garbage collected
     defer m.Close()
     // Insert new key-value pair    
     m.Put("First Key", 2)
@@ -47,7 +47,7 @@ func main(){
 
 ```
 
-#### Advanced Usage
+#### Advanced Example
 ``` go
 import (
     "github.com/pbivrell/ManagedMap" 
@@ -57,7 +57,7 @@ import (
 
 func main(){
     // Create map with default timeout as 5 seconds and unlimited accesses
-    m := ManagedMap.NewCustomManagedMap(ManagedMap.Conf(time.Second * 5, 0))
+    m := ManagedMap.NewCustomManagedMap(ManagedMap.Conf(Timeout: time.Second * 5, AccessCount: 0))
     defer m.Close()
     m.Put(12, nil)
     // Any number of access
@@ -71,22 +71,22 @@ func main(){
     }
     // Wait for time out
     time.Sleep(6 * time.Second)
-    // This get will fail because of timeout
+    // This get will not exist because of timeout
     value, has = m.Get(12)
-    if has {
-        fmt.Printf("Has item with value %v\n", value)
+    if !has {
+        fmt.Println("Item has been removed")
     }
     // Put item with single access overriding default
     m.PutCustom(true, 12.2, ManagedMap.Conf(time.Hour, 1))
-    // Get it.
+    // Access it once
     value, has := m.Get(true)
     if has {
         fmt.Printf("Has item with value %v\n", value)
     }
     // It should gone now
     value, has := m.Get(true)
-    if has {
-        fmt.Printf("Has item with value %v\n", value)
+    if !has {
+        fmt.Println("Item has been removed")
     }
 
 }
