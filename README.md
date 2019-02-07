@@ -8,18 +8,20 @@ The ManagedMap stores key-value pairs. The methods for Getting and Putting data 
 
 ## Methods
 Interactions with a managed map are done through the following methods.
-* managedMap.Get(key interface{})
-* managedMap.Put(key interface{}, value interface{})
-* managedMap.Remove(key interface{})
-* managedMap.Size()
-* managedMap.Close()
-* managedMap.PutCustom(key interface{}, value interface{}, conf Config)
+* Get(key interface{})
+* Put(key interface{}, value interface{})
+* Remove(key interface{})
+* Size()
+* Close()
+* PutCustom(key interface{}, value interface{}, conf Config)
 
 ## Example Useage
 Get library with `go get github.com/pbivrell/ManagedMap`
 
 #### Simple example
 ```go
+package main
+
 import (
     "github.com/pbivrell/ManagedMap" 
     "fmt"
@@ -39,7 +41,7 @@ func main(){
     }
     // Get value again. It will not exists because
     // the default number of accesses is 1
-    value, has := m.Get("First Key")
+    value, has = m.Get("First Key")
     if has {
         fmt.Printf("Has item with value %v\n", value)
     }
@@ -49,6 +51,8 @@ func main(){
 
 #### Advanced Example
 ``` go
+package main
+
 import (
     "github.com/pbivrell/ManagedMap" 
     "fmt"
@@ -57,9 +61,9 @@ import (
 
 func main(){
     // Create map with default timeout as 5 seconds and unlimited accesses
-    m := ManagedMap.NewCustomManagedMap(ManagedMap.Conf(Timeout: time.Second * 5, AccessCount: 0))
+    m := ManagedMap.NewCustomManagedMap(ManagedMap.Config{Timeout: time.Millisecond * 5, AccessCount: 0})
     defer m.Close()
-    m.Put(12, nil)
+    m.Put(12, "Hi There!")
     // Any number of access
     value, has := m.Get(12)
     if has {
@@ -70,27 +74,26 @@ func main(){
         fmt.Printf("Has item with value %v\n", value)
     }
     // Wait for time out
-    time.Sleep(6 * time.Second)
+    time.Sleep(6 * time.Millisecond)
     // This get will not exist because of timeout
     value, has = m.Get(12)
     if !has {
         fmt.Println("Item has been removed")
     }
     // Put item with single access overriding default
-    m.PutCustom(true, 12.2, ManagedMap.Conf(time.Hour, 1))
+    m.PutCustom(true, 12.2, ManagedMap.Config{Timeout: time.Hour, AccessCount: 1})
     // Access it once
-    value, has := m.Get(true)
+    value, has = m.Get(true)
     if has {
         fmt.Printf("Has item with value %v\n", value)
     }
     // It should gone now
-    value, has := m.Get(true)
+    value, has = m.Get(true)
     if !has {
         fmt.Println("Item has been removed")
     }
 
 }
-
 ```
 
 ## FAQ
