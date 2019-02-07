@@ -1,7 +1,7 @@
 # ManagedMap
 
 ## What is a ManagedMap
-A managed map is a wrapper around a [go map](https://blog.golang.org/go-maps-in-action), that provideds thread safe operations as well as automatic key-value removal after a configureable timeout and/or number of reads.
+A managed map is a wrapper around a [go map](https://blog.golang.org/go-maps-in-action), that provides thread safe operations as well as automatic key-value removal after a configurable timeout and/or number of reads.
 
 ## What can I put in a ManagedMap
 The ManagedMap stores key-value pairs. The methods for Getting and Putting data into the map are defined with interface{} this implies that you can put any data type in as the key and value. This is partially true. The value can be __any__ go type. The key must be a type that can be compared with the == operator. If it is not the underlying go map will panic. For more reading see [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
@@ -15,7 +15,7 @@ Interactions with a managed map are done through the following methods.
 * Close()
 * PutCustom(key interface{}, value interface{}, conf Config)
 
-## Example Useage
+## Example Usage
 Get library with `go get github.com/pbivrell/ManagedMap`
 
 #### Simple example
@@ -34,7 +34,7 @@ func main(){
     defer m.Close()
     // Insert new key-value pair    
     m.Put("First Key", 2)
-    // Get value and existance of key in map
+    // Get value and existence of key in map
     value, has := m.Get("First Key")
     if has {
         fmt.Printf("Has item with value %v\n", value)
@@ -87,7 +87,7 @@ func main(){
     if has {
         fmt.Printf("Has item with value %v\n", value)
     }
-    // It should gone now
+    // It should be gone now
     value, has = m.Get(true)
     if !has {
         fmt.Println("Item has been removed")
@@ -100,3 +100,5 @@ func main(){
 __What does this error mean *'panic: runtime error: hash of unhashable type ...'*?__
 
 As described [above](#What-can-I-put-in-a-ManagedMap) the ManagedMap allows you to __try__ to Put/Get any type of data. However the underlying data structure is a go map which only allows specific types into it namely only Boolean, Integer, Floating-point, Complex, String, Pointer, Channel, Interface, Struct, Array, and one other case. Inserting anything that is not one of these types will panic because of go's implementation of map. For more reading see [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
+
+
