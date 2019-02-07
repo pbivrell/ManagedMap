@@ -2,7 +2,7 @@ package ManagedMap
 // ManagedMap is a wrapper around a go map that provides synchronization 
 // via a sync.RWMutex. It also provides configurable automatic key-value pair 
 // removal based on a timeout and/or a number of accesses. The underlying
-// datastruct is intentionally unexported all interactions should be done
+// data structure is intentionally unexported all interactions should be done
 // via the Methods provided in this package
 
 import (
@@ -20,7 +20,7 @@ const (
 // Config is the struct that is used to Config the timeout and accessCount
 // of both the default values for all map items as well as individual map
 // items. The value '0' for either Timeout or AccessCount is interpreted
-// as infinite and the maxium value of the respective types will be used
+// as infinite and the maximum value of the respective types will be used
 // in place of infinity. 
 type Config struct {
     Timeout     time.Duration
@@ -39,8 +39,8 @@ type item struct {
 }
 
 // managedMap is a private struct that manages the internals of the managedMap
-// the data access paterns are very particular for this data structure. For that
-// reason it and its memebers are unexported. Users of this structure are required
+// the data access patterns are very particular for this data structure. For that
+// reason it and its members are unexported. Users of this structure are required
 // to make use of provided methods.
 type managedMap struct {
     default_timeout time.Duration
@@ -88,19 +88,19 @@ func (t *managedMap) Get(key interface{}) (interface{}, bool) {
     // Atomically read the number of access remaining
     accesses := atomic.LoadUint64(&item.accessRemaining)
     // If accesses remaining is 0 that means this has already
-    // been read more then its alotted amount of times. Its possible
-    // that the element is not quite deleted yet here so we prented that
+    // been read more than its allotted amount of times. Its possible
+    // that the element is not quite deleted yet here so we pretend that
     // it has already been delete.
     if accesses < 1 {
         return nil, false
     }
     // Hack to add negative 1 to a unit64. This is safe because at this point
-    // accesses is a positive value greater then 1.
+    // accesses is a positive value greater than 1.
     negative1 := int64(-1)
     atomic.StoreUint64(&item.accessRemaining, accesses + uint64(negative1))
     // If this is the last access we can use the removed channel to delete the
     // key. This is done in a goroutine so that the Get call does not block 
-    // to aquire the write lock.
+    // to acquire the write lock.
     if accesses == 1 {
         go func(t *managedMap, removed chan bool) {
             t.lock.Lock()
@@ -122,7 +122,7 @@ func (t *managedMap) Put(key, value interface{}) {
     t.PutCustom(key,value, Config{ t.default_timeout, t.default_access })
 }
 
-// Remove is a method of a managedMap that allows the user to remove a key and its
+// Remove is a method of a managedMap that allows the user to remove a key and it's
 // associated data from the map specifically the timer and access counts will cleared.
 // Remove method will panic when called after the Close method has been called. The key 
 // must be a type that can be compared with the == operator. If it is not the underlying 
@@ -185,7 +185,7 @@ func (t *managedMap) PutCustom(key, value interface{}, config Config) {
         return
     }
     t.lock.RUnlock()
-    // '0' as a config value implies infinite. We use math make value to suplement infinity.
+    // '0' as a config value implies infinite. We use math make value to supplement infinity.
     if config.Timeout == 0 {
         config.Timeout = math.MaxInt64
     }
@@ -209,14 +209,14 @@ func (t *managedMap) PutCustom(key, value interface{}, config Config) {
     // block until the timer expires or the items is removed. 
     go func(timer *time.Timer, t *managedMap, key interface{}, removed chan bool) {
         select {
-            // Waits on the removed channel. If the removed channel recieves a value
-            // we can safely delete the the key from the map because the senders aquire
+            // Waits on the removed channel. If the removed channel receives a value
+            // we can safely delete the the key from the map because the sender's acquire
             // a write lock on the data before sending data. The sender holds this lock
             // until we sender back on the same channel
         case <-removed:
             delete(t.m, key)
             removed <- true
-            // Waits on the timer channel. If the timer has expired we need to aquire
+            // Waits on the timer channel. If the timer has expired we need to acquire
             // the write lock before we can delete the data.
         case <-timer.C:
             t.lock.Lock()
@@ -234,4 +234,3 @@ func (t *managedMap) closed(){
         panic("Could not perform Close on a closed managedMap")
     }
 }
-
