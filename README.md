@@ -10,10 +10,10 @@ The ManagedMap stores key-value pairs. The methods for Getting and Putting data 
 Interactions with a managed map are done through the following methods.
 * managedMap.Get(key interface{})
 * managedMap.Put(key interface{}, value interface{})
-* managedMap.Remove(key ineterface{})
+* managedMap.Remove(key interface{})
 * managedMap.Size()
 * managedMap.Close()
-* managedMap.PutCustom()
+* managedMap.PutCustom(key interface{}, value interface{}, conf Config)
 
 ## Why would I use a ManagedMap
 
@@ -21,5 +21,6 @@ Interactions with a managed map are done through the following methods.
 ## Useage
 
 ## FAQ
-What does this error mean 'panic: runtime error: hash of unhashable type ...'?
+__What does this error mean 'panic: runtime error: hash of unhashable type ...'?__
+
 As described [above](#What-can-I-put-in-a-ManagedMap) the ManagedMap allows you to __try__ to Put/Get any type of data. However the underlying data structure is a go map which only allows specific types into it namely only Boolean, Integer, Floating-point, Complex, String, Pointer, Channel, Interface, Struct, Array, and one other case. Inserting anything that is not one of these types will panic because of go's implementation of map. For more reading see [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
