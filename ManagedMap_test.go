@@ -82,29 +82,3 @@ func TestExpire(t *testing.T) {
         testMap.Remove(test.key)
     }
 }
-
-/*func TestAccesses(t *testing.T) {
-    var tests = []struct {
-        key      interface{}
-        value    interface{}
-        accesses int
-        maxAccess
-        has      bool
-    }{
-        {"apple", 1, 10, false},
-    }
-
-    testMap := NewTimeOutMap(0)
-    defer testMap.Close()
-    for num, test := range tests {
-        testMap.Put(test.key, test.value, test.timeout)
-        time.Sleep(test.wait)
-        value, _, has:= testMap.Get(test.key)
-        if has != test.has {
-            t.Errorf("Test %d Failed: Inserted Key %v Value %v - Expected Exists: %v, Recieved Exists: %v\n",num +1, test.key, test.value, test.has, has)
-        }else if test.has && value != test.value {
-            t.Errorf("Test %d Failed: Inserted Key %v Value %v - Expected Value: %v, Recieved Value: %v\n",num+1, test.key, test.value, test.value, value)
-        }
-        testMap.Remove(test.key)
-    }
-}*/

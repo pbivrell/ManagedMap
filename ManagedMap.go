@@ -72,7 +72,9 @@ func NewCustomManagedMap(conf Config) *managedMap {
 // the passed key and a boolean representing whether or not it exists. 
 // A key does not exist if it was never inserted or has been removed by timeout
 // or exceeding accesses limit. Get will always panic when called after the Close
-// method has been called.
+// method has been called. The key must be a type that can be compared with the == operator. 
+// If it is not the underlying go map will panic. For more reading see 
+// [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
 func (t *managedMap) Get(key interface{}) (interface{}, bool) {
     t.lock.RLock()
     defer t.lock.RUnlock()
@@ -110,11 +112,67 @@ func (t *managedMap) Get(key interface{}) (interface{}, bool) {
     return item.data, true
 }
 
+// Put is a method of a managedMap that allows the user to insert a key-value pair.
+// Calling Put with a key that already exists will update the value but
+// will not alter the timer or the access count. The Put will always panic when called
+// after the Close method has been called. The key must be a type that can be compared 
+// with the == operator. If it is not the underlying go map will panic. For more reading see 
+// [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
+func (t *managedMap) Put(key, value interface{}) {
+    t.PutCustom(key,value, Config{ t.default_timeout, t.default_access })
+}
+
+// Remove is a method of a managedMap that allows the user to remove a key and its
+// associated data from the map specifically the timer and access counts will cleared.
+// Remove method will panic when called after the Close method has been called. The key 
+// must be a type that can be compared with the == operator. If it is not the underlying 
+// go map will panic. For more reading see 
+// [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
+func (t *managedMap) Remove(key interface{}) {
+    t.lock.Lock()
+    defer t.lock.Unlock()
+    // Panic if managedMap is closed
+    t.closed()
+    value, has := t.m[key]
+    if has {
+        value.removed <- true
+        <-value.removed
+    }
+}
+
+// Size is a method of a managedMap that will return the number of items
+// stored in the map. Size will panic when called after the Close method 
+// has been called.
+func (t *managedMap) Size() int {
+    t.lock.RLock()
+    defer t.lock.RUnlock()
+    // Panic if managedMap is closed
+    t.closed()
+    return len(t.m)
+}
+
+
+// Close is a method of a managedMap that cleans a ManagedMap. Any underlying data is set to
+// nil and all Goroutines are stopped. 
+func (t *managedMap) Close() {
+    t.lock.Lock()
+    defer t.lock.Unlock()
+    // Panic if managedMap is closed
+    t.closed()
+    for _, v := range t.m {
+        v.removed <- true
+        <-v.removed
+    }
+    t.m = nil
+}
+
 // PutCustom is a method of a managedMap that allows the user to insert a key-value
 // pair with custom values for timeout and access count in the form of a Config struct.
 // Calling PutCustom with a key that already exists will update the value but
 // will not alter the timer or the access count. PutCustom will always panic when called
-// after the Close method has been called.
+// after the Close method has been called. The key must be a type that can be compared with the == operator. 
+// If it is not the underlying go map will panic. For more reading see 
+// [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
 func (t *managedMap) PutCustom(key, value interface{}, config Config) {
     // Update only value if it already exists in the map
     t.lock.RLock()
@@ -166,54 +224,6 @@ func (t *managedMap) PutCustom(key, value interface{}, config Config) {
             delete(t.m, key)
         }
     }(timer, t, key, removed)
-}
-
-// Put is a method of a managedMap that allows the user to insert a key-value pair.
-// Calling Put with a key that already exists will update the value but
-// will not alter the timer or the access count. The Put will always panic when called
-// after the Close method has been called.
-func (t *managedMap) Put(key, value interface{}) {
-    t.PutCustom(key,value, Config{ t.default_timeout, t.default_access })
-}
-
-// Remove is a method of a managedMap that allows the user to remove a key and its
-// associated data from the map specifically the timer and access counts will cleared.
-// Remove method will panic when called after the Close method has been called.
-func (t *managedMap) Remove(key interface{}) {
-    t.lock.Lock()
-    defer t.lock.Unlock()
-    // Panic if managedMap is closed
-    t.closed()
-    value, has := t.m[key]
-    if has {
-        value.removed <- true
-        <-value.removed
-    }
-}
-
-// Close is a method of a managedMap that cleans a ManagedMap. Any underlying data is set to
-// nil and all Goroutines are stopped. 
-func (t *managedMap) Close() {
-    t.lock.Lock()
-    defer t.lock.Unlock()
-    // Panic if managedMap is closed
-    t.closed()
-    for _, v := range t.m {
-        v.removed <- true
-        <-v.removed
-    }
-    t.m = nil
-}
-
-// Size is a method of a managedMap that will return the number of items
-// stored in the map. Size will panic when called after the Close method 
-// has been called.
-func (t *managedMap) Size() int {
-    t.lock.RLock()
-    defer t.lock.RUnlock()
-    // Panic if managedMap is closed
-    t.closed()
-    return len(t.m)
 }
 
 // closed is a private method of a managedMap that panics if the Close method 
