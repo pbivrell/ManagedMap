@@ -114,7 +114,7 @@ func (t *managedMap) Get(key interface{}) (interface{}, bool) {
 
 // Put is a method of a managedMap that allows the user to insert a key-value pair.
 // Calling Put with a key that already exists will update the value but
-// will not alter the timer or the access count. The Put will always panic when called
+// will not alter the timer or the access count. Put will always panic when called
 // after the Close method has been called. The key must be a type that can be compared 
 // with the == operator. If it is not the underlying go map will panic. For more reading see 
 // [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
@@ -123,7 +123,8 @@ func (t *managedMap) Put(key, value interface{}) {
 }
 
 // Has is a method of a managedMap that allows the user to check the existance of a key.
-// The Has will always panic when called after the Close method has been called. The 
+// This method does not decrement the accessCount.
+// Has will always panic when called after the Close method has been called. The 
 // key must be a type that can be compared with the == operator. If it is not 
 // the underlying go map will panic. For more reading see 
 // [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
