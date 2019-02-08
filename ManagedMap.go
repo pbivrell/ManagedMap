@@ -122,6 +122,27 @@ func (t *managedMap) Put(key, value interface{}) {
     t.PutCustom(key,value, Config{ t.default_timeout, t.default_access })
 }
 
+// Has is a method of a managedMap that allows the user to check the existance of a key.
+// The Has will always panic when called after the Close method has been called. The 
+// key must be a type that can be compared with the == operator. If it is not 
+// the underlying go map will panic. For more reading see 
+// [Go maps in action](https://blog.golang.org/go-maps-in-action) the section about "Key types".
+func (t *managedMap) Has(key interface{}) bool {
+    t.lock.RLock()
+    defer t.lock.RUnlock()
+    // Panic if managedMap is closed
+    t.closed()
+    value, has := t.m[key]
+    if !has {
+        return false
+    }
+    // The techinally has the item but item may be in the process of being
+    // delete so we have to check if it is waiting to be deleted
+    accesses := atomic.LoadUint64(&value.accessRemaining)
+    return access != 0
+}
+
+
 // Remove is a method of a managedMap that allows the user to remove a key and it's
 // associated data from the map specifically the timer and access counts will cleared.
 // Remove method will panic when called after the Close method has been called. The key 

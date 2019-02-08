@@ -8,10 +8,11 @@ The ManagedMap stores key-value pairs. The methods for Getting and Putting data 
 
 ## Methods
 Interactions with a managed map are done through the following methods.
-* Get(key interface{})
+* Get(key interface{}) (interface{}, bool)
 * Put(key interface{}, value interface{})
+* Has(key interface{}) bool
 * Remove(key interface{})
-* Size()
+* Size() int
 * Close()
 * PutCustom(key interface{}, value interface{}, conf Config)
 
